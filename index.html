@@ -37,7 +37,7 @@
 
         // Exemple : ZwiftPower met souvent les données dans data.data
 
-        const results = data.data || data || [];
+        let results = data.data || data || [];
 
         results = results.sort((a, b) => {
             if (a.time_gun < b.time_gun) {
@@ -93,6 +93,7 @@ const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
   </script>
 </body>
 </html>
+
 
 
 
