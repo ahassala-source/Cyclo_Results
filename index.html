@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Résultats ZwiftPower (local)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f9fafb;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.6rem;
+      text-align: left;
+    }
+    th {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Résultats ZwiftPower</h1>
+  <div id="content">Chargement...</div>
+
+  <script>
+    // Charger le JSON local (même dossier que index.html)
+    fetch('5106370_view.json')
+      .then(response => response.json())
+      .then(data => {
+        console.log('✅ JSON chargé :', data);
+
+        // Exemple : ZwiftPower met souvent les données dans data.data
+        const results = data.data || data || [];
+
+        if (!Array.isArray(results) || results.length === 0) {
+          document.getElementById('content').textContent = "Aucun résultat trouvé.";
+          return;
+        }
+
+        // Construire un tableau HTML
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Catégorie</th>
+                <th>Nom</th>
+                <th>Temps (Gun)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        results.forEach((r, i) => {
+          html += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${r.category || ''}</td>
+              <td>${r.tname || r.name || ''}</td>
+              <td>${r.time_gun || ''}</td>
+            </tr>
+          `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('content').innerHTML = html;
+      })
+      .catch(err => {
+        console.error('Erreur de lecture JSON :', err);
+        document.getElementById('content').textContent = 'Erreur de chargement du fichier JSON.';
+      });
+  </script>
+</body>
+</html>
