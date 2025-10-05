@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>Résultats ZwiftPower - Classement Général</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(circle at top left, #0f172a 0%, #020617 100%);
+      font-family: 'Orbitron', Arial, sans-serif;
+      color: #f8fafc;
+    }
+    th, td { font-variant-numeric: tabular-nums; }
+    tr:hover { background-color: rgba(59,130,246,0.1); transition: background-color 0.2s; }
+    .female::after { content: ' ♀'; color: #f472b6; font-weight: bold; }
+    .rank-gold { color: #facc15; font-weight: 700; }
+    .rank-silver { color: #e5e7eb; font-weight: 700; }
+    .rank-bronze { color: #f97316; font-weight: 700; }
+  </style>
+</head>
+<body class="p-8">
+  <h1 class="text-3xl font-bold text-cyan-400 mb-6 text-center uppercase tracking-widest drop-shadow-[0_0_8px_#22d3ee]">
+    Classement Général ZwiftPower
+  </h1>
+
+  <div id="content" class="overflow-x-auto text-sm text-gray-200">Chargement...</div>
+
+  <script>
+    function toSeconds(time) {
+      if (!time) return null;
+      const t = (typeof time === 'string') ? time.trim() : time;
+      if (t === '' || t === '--' || (typeof t === 'string' && /DNF|DSQ/i.test(t))) return null;
+      if (typeof t === 'number') return Number.isFinite(t) ? t : null;
+      const parts = t.split(':').map(Number);
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 1) return parseFloat(parts[0]);
+      return null;
+    }
+
+    function formatTimeGun(time) {
+      if (!time || (typeof time === 'string' && /DNF|DSQ/i.test(time))) return '';
+      if (typeof time === 'string' && time.includes(':')) return time;
+      const total = Number(time);
+      if (!Number.isFinite(total)) return String(time);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = Math.floor(total % 60);
+      const parts = [];
+      if (h > 0) parts.push(`${h}h`);
+      if (m > 0 || h > 0) parts.push(`${m}m`);
+      parts.push(`${s}s`);
+      return parts.join(' ');
+    }
+
+    function formatDiff(deltaSeconds) {
+      if (deltaSeconds == null || !Number.isFinite(deltaSeconds)) return '';
+      if (Math.abs(deltaSeconds) < 0.001) return '';
+      const h = Math.floor(deltaSeconds / 3600);
+      const m = Math.floor((deltaSeconds % 3600) / 60);
+      const s = deltaSeconds - (h * 3600 + m * 60);
+      if (h > 0) return `+${h}h ${m}m ${s.toFixed(3)}s`;
+      if (m > 0) return `+${m}m ${s.toFixed(3)}s`;
+      return `+${s.toFixed(3)}s`;
+    }
+
+    function catColorClass(cat) {
+      switch (cat) {
+        case 'A': return 'text-red-500 font-semibold';
+        case 'B': return 'text-green-500 font-semibold';
+        case 'C': return 'text-cyan-400 font-semibold';
+        case 'D': return 'text-yellow-400 font-semibold';
+        case 'E': return 'text-pink-500 font-semibold';
+        default:  return 'text-gray-400';
+      }
+    }
+
+    fetch('5106370_view.json')
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(data => {
+        let results = data.data || data || [];
+        if (!Array.isArray(results) || results.length === 0) {
+          document.getElementById('content').textContent = "Aucun résultat trouvé.";
+          return;
+        }
+
+        // Tri global par temps croissant
+        results = results
+          .map(r => ({ ...r, secs: toSeconds(r.time_gun) }))
+          .filter(r => r.secs != null)
+          .sort((a, b) => a.secs - b.secs);
+
+        const bestSecs = results[0]?.secs ?? null;
+
+        let html = `
+          <table class="min-w-full border border-cyan-700 bg-slate-900/50 rounded-xl shadow-xl backdrop-blur-md">
+            <thead class="text-cyan-300 text-xs uppercase tracking-wider border-b border-cyan-600">
+              <tr>
+                <th class="p-2 text-center">#</th>
+                <th class="p-2 text-center">Cat</th>
+                <th class="p-2 text-left">Nom</th> <!-- Aligné à gauche -->
+                <th class="p-2 text-right">Temps</th>
+                <th class="p-2 text-right">Diff</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        results.forEach((r, i) => {
+          const diff = bestSecs != null && r.secs != null ? r.secs - bestSecs : null;
+          let rankClass = '';
+          if (i === 0) rankClass = 'rank-gold';
+          else if (i === 1) rankClass = 'rank-silver';
+          else if (i === 2) rankClass = 'rank-bronze';
+
+          const catClass = catColorClass(r.category);
+          const nameClass = (r.male === 0 || r.male === false) ? 'female' : '';
+
+          html += `
+            <tr class="border-b border-cyan-800/40 hover:bg-cyan-900/30">
+              <td class="p-2 text-center text-gray-400">${i + 1}</td>
+              <td class="p-2 text-center ${catClass}">${r.category || ''}</td>
+              <td class="p-2 text-left ${nameClass}">${r.name || ''}</td>
+              <td class="p-2 text-right text-gray-200">${formatTimeGun(r.time_gun)}</td>
+              <td class="p-2 text-right text-cyan-400">${formatDiff(diff)}</td>
+            </tr>
+          `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('content').innerHTML = html;
+      })
+      .catch(err => {
+        console.error('Erreur JSON :', err);
+        document.getElementById('content').textContent =
+          'Erreur de chargement du fichier JSON (' + err.message + ')';
+      });
+  </script>
+</body>
+</html>
