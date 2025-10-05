@@ -101,7 +101,7 @@
         // Trouver le meilleur temps (min) par catégorie
         const bestByCat = {};
         for (const r of results) {
-          const cat = r.category;
+          const cat = r.age;
           const secs = toSeconds(r.time_gun);
           if (cat && secs != null) {
             if (bestByCat[cat] == null || secs < bestByCat[cat]) bestByCat[cat] = secs;
@@ -124,7 +124,7 @@
         `;
 
         results.forEach((r, i) => {
-          const cat = r.category || '';
+          const cat = r.age || '';
           const secs = toSeconds(r.time_gun);
           const best = bestByCat[cat];
           const diff = (secs != null && best != null) ? (secs - best) : null;
@@ -151,3 +151,4 @@
   </script>
 </body>
 </html>
+
