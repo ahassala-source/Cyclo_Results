@@ -36,6 +36,13 @@
         console.log('✅ JSON chargé :', data);
 
         // Exemple : ZwiftPower met souvent les données dans data.data
+
+        data = data.sort((a, b) => {
+            if (a.time_gun < b.time_gun) {
+            return -1;
+            }
+        });
+
         const results = data.data || data || [];
 
         if (!Array.isArray(results) || results.length === 0) {
@@ -82,16 +89,10 @@ const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
     v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
     )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
 
-// trier le tableau...
-document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
-    const table = th.closest('table');
-    Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
-        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
-        .forEach(tr => table.appendChild(tr) );
-})));
   </script>
 </body>
 </html>
+
 
 
 
